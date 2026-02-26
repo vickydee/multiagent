@@ -165,8 +165,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
-        numAgents = gameState.getNumAgents()  # pacman + all ghosts
-
+        numAgents = gameState.getNumAgents() # pacman + all ghosts
         def value(state, agentIndex, depth):
             # Stop recursion on terminal states or when target ply depth is reached.
             if state.isWin() or state.isLose() or depth == self.depth:
@@ -177,7 +176,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
             return minValue(state, agentIndex, depth)
 
         def maxValue(state, depth):
-            # Pacman (maximizer) chooses the action with highest backed-up value.
+            # pacman picks max action
             actions = state.getLegalActions(0)
             if not actions:
                 return self.evaluationFunction(state)
@@ -185,7 +184,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
             best = float("-inf")
             for action in actions:
                 successor = state.generateSuccessor(0, action)
-                # After Pacman moves, the first ghost plays next.
+                # after pacman moves first ghost plays next
                 best = max(best, value(successor, 1, depth))
             return best
 
