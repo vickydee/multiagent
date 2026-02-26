@@ -249,7 +249,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                 # After Pacman moves first ghost plays next
                 best = max(best, value(successor, 1, depth, alpha, beta))
                 # Prune when max node: best > beta
-                if best > beta
+                if best > beta:
                     return best
                 alpha = max(alpha, beta)
             return best
