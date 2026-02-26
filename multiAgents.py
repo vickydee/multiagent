@@ -303,5 +303,56 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        numAgents = gameState.getNumAgents()  # pacman + all ghosts
+        def value(state, agentIndex, depth):
+            # Stop recursion on terminal states or when target ply depth is reached.
+            if state.isWin() or state.isLose() or depth == self.depth:
+                return self.evaluationFunction(state)
+
+            if agentIndex == 0:
+                return maxValue(state, depth)
+            return expValue(state, agentIndex, depth)
+
+        def maxValue(state, depth):
+            # pacman picks max action
+            actions = state.getLegalActions(0)
+            if not actions:
+                return self.evaluationFunction(state)
+
+            best = float("-inf")
+            for action in actions:
+                successor = state.generateSuccessor(0, action)
+                # after pacman moves first ghost plays next
+                best = max(best, value(successor, 1, depth))
+            return best
+
+        def expValue(state, agentIndex, depth):
+            # ghosts are modeled as uniformly random over legal actions
+            actions = state.getLegalActions(agentIndex)
+            if not actions:
+                return self.evaluationFunction(state)
+
+            probability = 1.0 / len(actions)
+            expected = 0.0
+            for action in actions:
+                successor = state.generateSuccessor(agentIndex, action)
+                # Increment ply only after the last ghost has moved.
+                if agentIndex == numAgents - 1:
+                    successorValue = value(successor, 0, depth + 1)
+                else:
+                    successorValue = value(successor, agentIndex + 1, depth)
+                expected += probability * successorValue
+            return expected
+
+        # Root action selection for Pacman: pick argmax over successor values.
+        bestScore = float("-inf")
+        bestAction = Directions.STOP
+        for action in gameState.getLegalActions(0):
+            successor = gameState.generateSuccessor(0, action)
+            score = value(successor, 1, 0)
+            if score > bestScore:
+                bestScore = score
+                bestAction = action
+
+        return bestAction
 
