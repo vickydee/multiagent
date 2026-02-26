@@ -237,6 +237,12 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                 return maxValue(state, depth, alpha, beta)
             return minValue(state, agentIndex, depth, alpha, beta)
 
+        def nextTurn(agentIndex, depth):
+            # Advance to the next agent; increase ply depth after the last ghost.
+            nextAgent = (agentIndex + 1) % numAgents
+            nextDepth = depth + 1 if nextAgent == 0 else depth
+            return nextAgent, nextDepth
+
         def maxValue(state, depth, alpha, beta):
             # Pacman picks max action
             actions = state.getLegalActions(0)
@@ -246,12 +252,13 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             best = float("-inf")
             for action in actions:
                 successor = state.generateSuccessor(0, action)
-                # After Pacman moves first ghost plays next
-                best = max(best, value(successor, 1, depth, alpha, beta))
+                nextAgent, nextDepth = nextTurn(0, depth)
+                childValue = value(successor, nextAgent, nextDepth, alpha, beta)
+                best = max(best, childValue)
                 # Prune when max node: best > beta
                 if best > beta:
                     return best
-                alpha = max(alpha, beta)
+                alpha = max(alpha, best)
             return best
 
         def minValue(state, agentIndex, depth, alpha, beta):
@@ -263,12 +270,9 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             best = float("inf")
             for action in actions:
                 successor = state.generateSuccessor(agentIndex, action)
-                # Inc (++) ply only after the last ghost has moved.
-                if agentIndex == numAgents - 1:
-                    successorValue = value(successor, 0, depth + 1, alpha, beta)
-                else:
-                    successorValue = value(successor, agentIndex + 1, depth, alpha, beta)
-                best = min(best, successorValue)
+                nextAgent, nextDepth = nextTurn(agentIndex, depth)
+                childValue = value(successor, nextAgent, nextDepth, alpha, beta)
+                best = min(best, childValue)
                 # Prune when min node: best < alpha
                 if best < alpha:
                     return best
@@ -276,13 +280,19 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             return best
 
         # Root action selection for Pacman: pick argmax over successor values.
+        actions = gameState.getLegalActions(0)
+        if not actions:
+            return Directions.STOP
+
         bestScore = float("-inf")
-        bestAction = Directions.STOP
+        bestAction = actions[0]
         alpha = float("-inf")
         beta = float("inf")
-        for action in gameState.getLegalActions(0):
+
+        for action in actions:
             successor = gameState.generateSuccessor(0, action)
-            score = value(successor, 1, 0, alpha, beta)
+            nextAgent, nextDepth = nextTurn(0, 0)
+            score = value(successor, nextAgent, nextDepth, alpha, beta)
             if score > bestScore:
                 bestScore = score
                 bestAction = action
