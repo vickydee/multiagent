@@ -166,17 +166,17 @@ class MinimaxAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
         numAgents = gameState.getNumAgents() # pacman + all ghosts
-        def value(state, agentIndex, depth):
+        def value(state, agentIndex, depth, alpha, beta):
             # Stop recursion on terminal states or when target ply depth is reached.
             if state.isWin() or state.isLose() or depth == self.depth:
                 return self.evaluationFunction(state)
 
             if agentIndex == 0:
-                return maxValue(state, depth)
-            return minValue(state, agentIndex, depth)
+                return maxValue(state, depth, alpha, beta)
+            return minValue(state, agentIndex, depth, alpha, beta)
 
-        def maxValue(state, depth):
-            # pacman picks max action
+        def maxValue(state, depth, alpha, beta):
+            # Pacman picks max action
             actions = state.getLegalActions(0)
             if not actions:
                 return self.evaluationFunction(state)
@@ -184,11 +184,15 @@ class MinimaxAgent(MultiAgentSearchAgent):
             best = float("-inf")
             for action in actions:
                 successor = state.generateSuccessor(0, action)
-                # after pacman moves first ghost plays next
-                best = max(best, value(successor, 1, depth))
+                # After Pacman moves first ghost plays next
+                best = max(best, value(successor, 1, depth, alpha, beta))
+                # Prune when max node: best > beta
+                if best > beta
+                    return best
+                alpha = max(alpha, beta)
             return best
 
-        def minValue(state, agentIndex, depth):
+        def minValue(state, agentIndex, depth, alpha, beta):
             # Each ghost is a minimizer over its legal actions.
             actions = state.getLegalActions(agentIndex)
             if not actions:
@@ -197,24 +201,31 @@ class MinimaxAgent(MultiAgentSearchAgent):
             best = float("inf")
             for action in actions:
                 successor = state.generateSuccessor(agentIndex, action)
-                # Increment ply only after the last ghost has moved.
+                # Inc (++) ply only after the last ghost has moved.
                 if agentIndex == numAgents - 1:
-                    successorValue = value(successor, 0, depth + 1)
+                    successorValue = value(successor, 0, depth + 1, alpha, beta)
                 else:
-                    successorValue = value(successor, agentIndex + 1, depth)
+                    successorValue = value(successor, agentIndex + 1, depth, alpha, beta)
                 best = min(best, successorValue)
+                # Prune when min node: best < alpha
+                if best < alpha:
+                    return best
+                beta = min(beta, best)
             return best
 
         # Root action selection for Pacman: pick argmax over successor values.
         bestScore = float("-inf")
         bestAction = Directions.STOP
+        alpha = float("-inf")
+        beta = float("inf")
         for action in gameState.getLegalActions(0):
             successor = gameState.generateSuccessor(0, action)
-            score = value(successor, 1, 0)
+            score = value(successor, 1, 0, alpha, beta)
             if score > bestScore:
                 bestScore = score
                 bestAction = action
-
+            alpha = max(alpha, bestScore)
+            
         return bestAction
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
